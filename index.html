@@ -1,328 +1,43 @@
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lea Rifas - MzTec Final</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root {
-            --primary: #25D366;
-            --secondary: #075E54;
-            --danger: #e74c3c;
-            --bg: #e5ddd5;
-            --white: #ffffff;
-            --mztec: #2c3e50;
-            --accent: #3498db;
-            --purple: #9b59b6;
-            --orange: #f39c12;
-            --teal: #008080;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;
-        }
-        header {
-            background-color: var(--secondary);
-            color: white; padding: 12px; text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            position: sticky; top: 0; z-index: 100;
-        }
-        header h1 { margin: 0; font-size: 1.2rem; }
-        
-        .tabs { display: flex; background: white; border-bottom: 1px solid #ccc; }
-        .tab { 
-            flex: 1; padding: 12px; text-align: center; font-weight: bold; 
-            color: #666; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.85rem;
-        }
-        .tab.active { color: var(--secondary); border-bottom: 3px solid var(--secondary); }
-
-        .config-panel {
-            background: white; margin: 10px; padding: 12px; border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-        .config-grid { 
-            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; 
-        }
-        .config-field { flex: 1; min-width: 80px; }
-        .config-field label { font-size: 8px; font-weight: bold; color: #888; margin-bottom: 2px; display: block; text-transform: uppercase; }
-        .config-field input { 
-            width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; outline: none;
-        }
-        
-        .btn-reset { 
-            width: 100%; background-color: var(--danger); color: white; border: none; 
-            padding: 6px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;
-        }
-
-        .container { flex: 1; padding: 10px; padding-bottom: 250px; }
-        #pdf-content { background: white; padding: 10px; border-radius: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        
-        .num-card {
-            background: white; border-radius: 8px; padding: 6px; text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #eee;
-            position: relative;
-        }
-        .num-card.occupied { border-left: 4px solid var(--accent); background: #f8fbff; }
-        .num-card.paid { border-left: 4px solid var(--primary); background: #f0fff4; }
-        
-        .trevo { position: absolute; top: 1px; right: 2px; font-size: 10px; display: none; }
-        .num-card.paid .trevo { display: block; }
-
-        .num-label { font-weight: bold; font-size: 16px; color: #444; display: block; }
-        .num-input {
-            width: 100%; border: none; border-bottom: 1px solid #eee;
-            text-align: center; font-size: 10px; padding: 4px 0; background: transparent;
-            outline: none;
-        }
-        .check-pago { transform: scale(0.8); margin-top: 4px; cursor: pointer; }
-
-        .fab-container {
-            position: fixed; bottom: 32px; left: 0; width: 100%;
-            background: white; padding: 10px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 99;
-        }
-        .btn-action {
-            padding: 12px 2px; border: none; border-radius: 8px;
-            color: white; font-weight: bold; font-size: 10px;
-            text-align: center; text-transform: uppercase;
-        }
-        .btn-save { background-color: var(--accent); }
-        .btn-pdf { background-color: var(--purple); }
-        .btn-zap { background-color: var(--primary); }
-        .btn-share { background-color: var(--orange); }
-        .btn-cobrar { background-color: var(--teal); }
-
-        footer {
-            background: var(--mztec); color: white; text-align: center;
-            padding: 6px; font-size: 10px; font-weight: 300;
-            position: fixed; bottom: 0; width: 100%; z-index: 100;
-        }
-
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 1001; align-items: center; justify-content: center;
-        }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; }
-        
-        @media print {
-            .no-print { display: none !important; }
-            .grid { grid-template-columns: repeat(5, 1fr) !important; }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123d2c">
+    <meta name="description" content="Confira as campanhas e escolha suas dezenas na Lea Rifas.">
+    <link rel="icon" href="./icon.ico" sizes="any">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Campanhas | Lea Rifas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./campaigns-page.js" defer></script>
 </head>
-<body>
-
-<header class="no-print"><h1>Lea Rifas 🍀</h1></header>
-
-<div class="tabs no-print">
-    <div class="tab active" onclick="switchRifa(1)">Rifa 01</div>
-    <div class="tab" onclick="switchRifa(2)">Rifa 02</div>
-</div>
-
-<div class="config-panel no-print">
-    <div class="config-grid">
-        <div class="config-field"><label>Prêmio (R$)</label><input type="text" id="config-premio" placeholder="200,00" onchange="salvarConfig()"></div>
-        <div class="config-field"><label>Dezena (R$)</label><input type="text" id="config-valor" placeholder="3,00" onchange="salvarConfig()"></div>
-        <div class="config-field"><label>Data Sorteio</label><input type="text" id="config-data" placeholder="00/00/00" onchange="salvarConfig()"></div>
+<body data-page="campaigns">
+<header class="site-header">
+    <a class="brand" href="./index.html" aria-label="Lea Rifas — página inicial">
+        <img src="./logo-transparent.png" alt="Lea Rifas — A sorte é sua">
+    </a>
+    <div class="account">
+        <span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span>
+        <span id="account-name" class="account-name">Visitante</span>
+        <a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a>
     </div>
-    <button class="btn-reset" onclick="zerarRifa()">⚠️ ZERAR RIFA</button>
-</div>
-
-<div class="container">
-    <div id="pdf-content">
-        <div style="text-align: center; margin-bottom: 10px;">
-            <h2 id="pdf-title" style="margin: 0; color: #075E54; font-size: 18px;">Rifa</h2>
-            <p id="pdf-subtitle" style="margin: 5px 0; font-size: 12px; font-weight: bold;"></p>
-            <p id="pdf-date" style="margin: 0; font-size: 11px; color: #555;"></p>
+</header>
+<main class="shell">
+    <div id="app-notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <nav class="nav" aria-label="Navegação principal">
+        <a class="active" href="./index.html">Campanhas</a>
+        <a href="./minhas-dezenas.html">Minhas dezenas</a>
+        <a id="manager-nav" class="hidden" href="./painel.html">Painel gerencial</a>
+    </nav>
+    <section class="panel">
+        <div class="section-heading">
+            <div><h1>Campanhas</h1><p class="muted">Escolha uma campanha e reserve suas dezenas disponíveis.</p></div>
         </div>
-        <div id="grid" class="grid"></div>
-    </div>
-</div>
-
-<div class="fab-container no-print">
-    <button class="btn-action btn-save" onclick="salvarDados()">💾 SALVAR</button>
-    <button class="btn-action btn-pdf" onclick="exportarPDF()">📄 PDF</button>
-    <button class="btn-action btn-share" onclick="compartilharDisponiveis()">📢 DISPONÍVEIS</button>
-    <button class="btn-action btn-zap" onclick="abrirModal()">✅ CONFIRMAR</button>
-    <button class="btn-action btn-cobrar" onclick="abrirModalCobrar()" style="grid-column: span 2;">💸 COBRANÇA PIX</button>
-</div>
-
-<footer>Lea Rifas deseja boa sorte!</footer>
-
-<div id="modal" class="no-print" onclick="this.style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="modal-title" style="margin-top:0">Confirmar WhatsApp</h3>
-        <input type="text" id="zap-nome" style="width:100%; padding:15px; border:1px solid #ddd; border-radius:10px; margin-bottom: 15px;" placeholder="Nome do Comprador">
-        <button id="btn-modal-acao" class="btn-action btn-zap" style="width:100%; font-size: 14px; padding: 15px;">ENVIAR AGORA</button>
-    </div>
-</div>
-
-<script>
-    let currentRifa = 1;
-    let db = {
-        rifa1: { premio: "200,00", valorDezena: "3,00", dataSorteio: "", compradores: {}, pagos: {} },
-        rifa2: { premio: "500,00", valorDezena: "5,00", dataSorteio: "", compradores: {}, pagos: {} }
-    };
-
-    function init() {
-        const salvo = localStorage.getItem('rifa_mztec_v_final_v11');
-        if (salvo) db = JSON.parse(salvo);
-        render();
-    }
-
-    function switchRifa(num) {
-        currentRifa = num;
-        document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === num-1));
-        render();
-    }
-
-    function render() {
-        const data = db[`rifa${currentRifa}`];
-        document.getElementById('config-premio').value = data.premio || "";
-        document.getElementById('config-valor').value = data.valorDezena || "";
-        document.getElementById('config-data').value = data.dataSorteio || "";
-        
-        document.getElementById('pdf-title').innerText = "Lea Rifas - Rifa 0" + currentRifa;
-        document.getElementById('pdf-subtitle').innerText = `Rifa de R$ ${data.valorDezena || '0,00'} para R$ ${data.premio || '0,00'}`;
-        document.getElementById('pdf-date').innerText = data.dataSorteio ? `Data do Sorteio: ${data.dataSorteio}` : "";
-
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        for (let i = 1; i <= 100; i++) {
-            let num = i === 100 ? "00" : i.toString().padStart(2, '0');
-            const nome = data.compradores[num] || "";
-            const isPago = data.pagos[num] || false;
-            
-            grid.innerHTML += `
-                <div class="num-card ${nome ? (isPago ? 'paid' : 'occupied') : ''}" id="card-${num}">
-                    <span class="trevo">🍀</span>
-                    <span class="num-label">${num}</span>
-                    <input type="text" class="num-input" id="num-${num}" value="${nome}" oninput="updateCard('${num}')">
-                    <input type="checkbox" class="check-pago no-print" id="check-${num}" ${isPago ? 'checked' : ''} onchange="updateCard('${num}')">
-                </div>`;
-        }
-    }
-
-    function updateCard(num) {
-        const input = document.getElementById(`num-${num}`);
-        const check = document.getElementById(`check-${num}`);
-        const card = document.getElementById(`card-${num}`);
-        card.classList.remove('occupied', 'paid');
-        if (input.value.trim()) {
-            if (check.checked) card.classList.add('paid');
-            else card.classList.add('occupied');
-        } else { check.checked = false; }
-    }
-
-    function salvarConfig() {
-        db[`rifa${currentRifa}`].premio = document.getElementById('config-premio').value;
-        db[`rifa${currentRifa}`].valorDezena = document.getElementById('config-valor').value;
-        db[`rifa${currentRifa}`].dataSorteio = document.getElementById('config-data').value;
-        localStorage.setItem('rifa_mztec_v_final_v11', JSON.stringify(db));
-        render();
-    }
-
-    function salvarDados() {
-        const data = db[`rifa${currentRifa}`];
-        for (let i = 1; i <= 100; i++) {
-            let num = i === 100 ? "00" : i.toString().padStart(2, '0');
-            const nome = document.getElementById(`num-${num}`).value.trim();
-            const pago = document.getElementById(`check-${num}`).checked;
-            if (nome) { data.compradores[num] = nome; data.pagos[num] = pago; } 
-            else { delete data.compradores[num]; delete data.pagos[num]; }
-        }
-        localStorage.setItem('rifa_mztec_v_final_v11', JSON.stringify(db));
-        alert("Salvo com sucesso!");
-        render();
-    }
-
-    function zerarRifa() {
-        if (confirm("Apagar todos os dados desta rifa?")) {
-            db[`rifa${currentRifa}`] = { premio: "", valorDezena: "", dataSorteio: "", compradores: {}, pagos: {} };
-            localStorage.setItem('rifa_mztec_v_final_v11', JSON.stringify(db));
-            render();
-        }
-    }
-
-    function exportarPDF() {
-        const element = document.getElementById('pdf-content');
-        const opt = {
-            margin: 5, filename: `Rifa_0${currentRifa}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
-    }
-
-    function abrirModal() { 
-        document.getElementById('modal-title').innerText = "Enviar Confirmação";
-        document.getElementById('btn-modal-acao').onclick = gerarLinkZap;
-        document.getElementById('btn-modal-acao').className = "btn-action btn-zap";
-        document.getElementById('modal').style.display = 'flex'; 
-    }
-
-    function abrirModalCobrar() {
-        document.getElementById('modal-title').innerText = "Enviar Cobrança Pix";
-        document.getElementById('btn-modal-acao').onclick = gerarLinkCobranca;
-        document.getElementById('btn-modal-acao').className = "btn-action btn-cobrar";
-        document.getElementById('modal').style.display = 'flex';
-    }
-
-    function compartilharDisponiveis() {
-        const data = db[`rifa${currentRifa}`];
-        let disponiveis = [];
-        for (let i = 1; i <= 100; i++) {
-            let num = i === 100 ? "00" : i.toString().padStart(2, '0');
-            if (!data.compradores[num]) { disponiveis.push(num); }
-        }
-        if (disponiveis.length === 0) return alert("Não há dezenas disponíveis!");
-        const premio = data.premio || "0,00";
-        const valor = data.valorDezena || "0,00";
-        let msg = `*DEZENAS DISPONÍVEIS*%0A`;
-        msg += `Rifa de R$ ${valor} para R$ ${premio}%0A%0A`;
-        for (let i = 0; i < disponiveis.length; i++) {
-            msg += disponiveis[i] + (i < disponiveis.length - 1 ? "," : "");
-            if ((i + 1) % 14 === 0) msg += "%0A";
-        }
-        msg += `%0A🤞🍀😉%0A%0ASó ganha quem joga! Chama no zap e garanta sua dezena. (73)998216141%0A%0ALea Rifas deseja boa sorte!`;
-        window.open(`https://wa.me/?text=${msg}`, '_blank');
-    }
-
-    function gerarLinkZap() {
-        const nomeAlvo = document.getElementById('zap-nome').value.trim();
-        const data = db[`rifa${currentRifa}`];
-        const dezenas = Object.keys(data.compradores).filter(k => data.compradores[k].toLowerCase() === nomeAlvo.toLowerCase());
-        if (!dezenas.length) return alert("Nome não encontrado!");
-        
-        const dSorteio = data.dataSorteio ? `%0A*Sorteio:* ${data.dataSorteio}` : "";
-        const msg = `Olá *${nomeAlvo}*! 👋%0AConfirmamos suas dezenas na *Lea Rifas*.🍀%0A%0A*Rifa de R$ ${data.valorDezena} para R$ ${data.premio}*%0A%0A*Dezenas:* ${dezenas.join(', ')}${dSorteio}%0A%0ALea Rifas deseja boa sorte! 🍀`;
-        window.open(`https://wa.me/?text=${msg}`, '_blank');
-        document.getElementById('modal').style.display = 'none';
-    }
-
-    function gerarLinkCobranca() {
-        const nomeAlvo = document.getElementById('zap-nome').value.trim();
-        const data = db[`rifa${currentRifa}`];
-        const dezenas = Object.keys(data.compradores).filter(k => data.compradores[k].toLowerCase() === nomeAlvo.toLowerCase());
-        
-        if (!dezenas.length) return alert("Comprador não encontrado!");
-        
-        const valorUnitario = parseFloat(data.valorDezena.replace(',', '.'));
-        const total = (dezenas.length * valorUnitario).toFixed(2).replace('.', ',');
-        
-        const msg = `Oi! Passando apenas para saber se deseja confirmar suas dezenas reservadas (${dezenas.join(', ')})? 😊%0A%0A*Rifa de R$ ${data.valorDezena} para R$ ${data.premio}*%0A%0AComo são ${dezenas.length} dezenas, o valor total fica R$ ${total}. Para facilitar, segue a chave Pix abaixo. Aí é só me mandar o comprovante para eu confirmar seu nome no sorteio!%0A%0A📌 *Chave Pix:* 73998216141%0A💰 *Valor:* R$ ${total}%0A%0ALea Rifas deseja boa sorte! 🍀`;
-        
-        window.open(`https://wa.me/?text=${msg}`, '_blank');
-        document.getElementById('modal').style.display = 'none';
-    }
-    
-    init();
-</script>
+        <div id="campaign-list" class="grid-campaigns"><p class="empty">Carregando campanhas…</p></div>
+    </section>
+</main>
+<footer class="site-footer">Lea Rifas deseja boa sorte! 🍀</footer>
 </body>
 </html>

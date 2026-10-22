@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123d2c">
+    <link rel="icon" href="./icon.ico" sizes="any">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Painel gerencial | Lea Rifas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="./supabase-config.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./manager-page.js" defer></script>
+</head>
+<body data-page="manager">
+<header class="site-header">
+    <a class="brand" href="./index.html" aria-label="Lea Rifas — página inicial"><img src="./logo-transparent.png" alt="Lea Rifas — A sorte é sua"></a>
+    <div class="account"><span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span><span id="account-name" class="account-name">Visitante</span><a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a></div>
+</header>
+<main class="shell">
+    <div id="app-notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <nav class="nav" aria-label="Navegação principal">
+        <a href="./index.html">Campanhas</a>
+        <a href="./minhas-dezenas.html">Minhas dezenas</a>
+        <a id="manager-nav" class="active" href="./painel.html">Painel gerencial</a>
+    </nav>
+    <section class="panel">
+        <div class="section-heading">
+            <div><h1>Painel gerencial</h1><p class="muted">Vendas, pagamentos e situação de todas as campanhas.</p></div>
+            <button id="new-campaign-button" type="button" class="button">＋ Nova campanha</button>
+        </div>
+        <div id="manager-stats" class="stats"></div>
+    </section>
+    <section id="sale-panel" class="panel hidden">
+        <h2>Nova venda pelo painel</h2>
+        <p class="muted">Registre o cliente, as dezenas e o status do pagamento. O cliente e a venda entram no CRM e na cartela pública.</p>
+        <form id="sale-form">
+            <div class="form-grid">
+                <div class="field"><label for="sale-campaign">Campanha</label><select id="sale-campaign" required></select></div>
+                <div class="field"><label for="sale-status">Pagamento</label><select id="sale-status"><option value="confirmed">Pago / confirmado</option><option value="pending">Pendente</option></select></div>
+                <div class="field"><label for="sale-customer-name">Nome do cliente</label><input id="sale-customer-name" required maxlength="100" autocomplete="name"></div>
+                <div class="field"><label for="sale-customer-phone">Telefone para contato</label><input id="sale-customer-phone" required type="tel" autocomplete="tel" inputmode="tel" placeholder="(77) 99999-9999"></div>
+                <div class="field span-2"><label for="sale-numbers">Dezenas</label><input id="sale-numbers" required inputmode="numeric" placeholder="Ex.: 01, 12, 37"><small class="muted">Informe números de 00 a 99, separados por vírgula ou espaço.</small></div>
+            </div>
+            <div class="form-actions"><button id="sale-submit" type="submit" class="button">Registrar venda</button></div>
+        </form>
+    </section>
+    <section id="crm-panel" class="panel hidden">
+        <div class="section-heading">
+            <div><h2>CRM de clientes</h2><p class="muted">Débito é a soma das dezenas pendentes. Preferências são as dezenas mais recorrentes no histórico, incluindo vendas pelo painel e reservas pelo link.</p></div>
+        </div>
+        <div class="field customer-search"><label for="customer-search">Buscar cliente</label><input id="customer-search" type="search" placeholder="Nome ou telefone"></div>
+        <div id="manager-customers" class="table-wrap"></div>
+    </section>
+    <section id="campaign-form-panel" class="panel hidden">
+        <h2 id="campaign-form-title">Criar campanha</h2>
+        <form id="campaign-form">
+            <input id="campaign-id" type="hidden">
+            <div class="form-grid">
+                <div class="field span-2"><label for="form-name">Nome da campanha</label><input id="form-name" required maxlength="90" placeholder="Ex.: Rifa de outubro"></div>
+                <div class="field"><label for="form-prize">Prêmio (R$)</label><input id="form-prize" required inputmode="decimal" placeholder="200,00"></div>
+                <div class="field"><label for="form-price">Valor por dezena (R$)</label><input id="form-price" required inputmode="decimal" placeholder="3,00"></div>
+                <div class="field"><label for="form-date">Data prevista do sorteio</label><input id="form-date" type="date"></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="button">Salvar campanha</button><button id="cancel-campaign-form" type="button" class="button secondary">Cancelar</button></div>
+        </form>
+    </section>
+    <section class="panel">
+        <h2>Campanhas e vendas</h2>
+        <div id="manager-campaigns" class="table-wrap"></div>
+    </section>
+    <section class="panel">
+        <h2>Reservas e pagamentos</h2>
+        <div id="manager-tickets" class="table-wrap"></div>
+    </section>
+</main>
+<footer class="site-footer">Lea Rifas deseja boa sorte! 🍀</footer>
+<div id="archive-modal" class="modal-backdrop hidden" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="archive-title">
+        <button class="modal-close" type="button" data-action="close-modal" aria-label="Fechar">×</button>
+        <h2 id="archive-title">Arquivar campanha</h2>
+        <p class="muted">Informe a dezena oficial sorteada. A campanha será encerrada após a confirmação.</p>
+        <form id="archive-form">
+            <input id="archive-campaign-id" type="hidden">
+            <div class="field"><label for="drawn-number">Dezena sorteada (00–99)</label><input id="drawn-number" inputmode="numeric" pattern="(?:[0-9]|[0-9][0-9])" required placeholder="Ex.: 07"></div>
+            <label class="check-line"><input id="publish-winner" type="checkbox"> Publicar o resultado e o nome do ganhador na página pública.</label>
+            <div id="winner-name-field" class="field hidden"><label for="winner-name">Nome para publicação (opcional)</label><input id="winner-name" maxlength="100" placeholder="Deixe vazio para publicar apenas a dezena"></div>
+            <div class="form-actions"><button type="submit" class="button">Arquivar campanha</button><button type="button" class="button secondary" data-action="close-modal">Cancelar</button></div>
+        </form>
+    </section>
+</div>
+<section id="poster" class="poster-export" aria-hidden="true">
+    <div class="poster-header">
+        <img src="./poster-logo.png" class="poster-logo" alt="Lea Rifas — A sorte é sua">
+        <img src="./poster-title.png" class="poster-title-art" alt="Rifa pela Federal">
+    </div>
+    <div class="poster-offer">
+        <div class="poster-price-block"><span class="poster-ticket-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M8 11h31a3 3 0 0 1 3 3v6a5 5 0 0 0 0 10v5a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-5a5 5 0 0 0 0-10v-6a3 3 0 0 1 3-3Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="m16 31 15-15" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="18" r="2.5" fill="currentColor"/><circle cx="30" cy="30" r="2.5" fill="currentColor"/></svg></span><div><strong id="poster-price"></strong><small>CADA NÚMERO</small></div></div>
+        <span class="poster-divider" aria-hidden="true"></span>
+        <div class="poster-prize-block"><span class="poster-trophy-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M15 6h18v10c0 9-3.5 14-9 14s-9-5-9-14V6Zm0 4H7v5c0 7 4 11 10 11m16-16h8v5c0 7-4 11-10 11M24 30v8m-9 4h18m-15-4h12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><small>CONCORRA A</small><strong id="poster-prize"></strong></div></div>
+    </div>
+    <div id="poster-numbers" class="poster-grid"></div>
+    <div class="poster-footer">
+        <span class="poster-pix"><strong><i aria-hidden="true">◆</i> pix</strong><small>Chave Pix</small></span>
+        <span class="poster-footer-divider" aria-hidden="true"></span>
+        <strong id="poster-key" class="poster-key"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4a19 19 0 0 0-16 29L5 43l11-3a19 19 0 1 0 8-36Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 14c-2 2-2 5 0 9s6 8 11 10c3 1 6 0 7-2l-5-4-4 2-7-7 2-4-4-4Z" fill="currentColor"/></svg> 73998216141</strong>
+    </div>
+    <div id="poster-slogan" class="poster-slogan"><span>Boa Sorte!</span></div>
+</section>
+</body>
+</html>

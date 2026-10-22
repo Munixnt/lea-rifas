@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123d2c">
+    <link rel="icon" href="./icon.ico" sizes="any">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Entrar ou criar conta | Lea Rifas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./auth-page.js" defer></script>
+</head>
+<body data-page="auth">
+<header class="site-header">
+    <a class="brand" href="./index.html" aria-label="Lea Rifas — página inicial"><img src="./logo-transparent.png" alt="Lea Rifas — A sorte é sua"></a>
+    <div class="account"><span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span><span id="account-name" class="account-name">Visitante</span><a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a></div>
+</header>
+<main class="shell">
+    <div id="app-notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <nav class="nav" aria-label="Navegação principal">
+        <a href="./index.html">Campanhas</a>
+        <a href="./minhas-dezenas.html">Minhas dezenas</a>
+        <a id="manager-nav" class="hidden" href="./painel.html">Painel gerencial</a>
+    </nav>
+    <section class="panel auth-panel">
+        <h1 id="auth-title">Entrar na sua conta</h1>
+        <p id="auth-hint" class="muted">Entre para reservar suas dezenas e acompanhar seus pagamentos.</p>
+        <form id="auth-form">
+            <div class="field">
+                <label for="auth-phone">Celular (usuário e contato)</label>
+                <input id="auth-phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(77) 99999-9999">
+            </div>
+            <div id="signup-fields" class="field hidden">
+                <label for="auth-name">Seu nome</label>
+                <input id="auth-name" autocomplete="name" maxlength="100">
+            </div>
+            <div class="field auth-password"><label for="auth-password">Senha</label><input id="auth-password" type="password" required minlength="8" autocomplete="current-password"></div>
+            <div class="form-actions"><button id="auth-submit" type="submit" class="button full">Entrar</button></div>
+        </form>
+        <p class="muted auth-switch"><span id="auth-switch-hint">Ainda não tem conta?</span> <button id="auth-switch" type="button" class="button secondary small">Criar conta</button></p>
+        <p class="muted auth-recovery">Seu celular é o usuário e também fica salvo como contato, mas não é verificado. Não enviamos SMS nem e-mail; guarde sua senha com segurança, pois a recuperação automática não está disponível.</p>
+    </section>
+</main>
+<footer class="site-footer">Lea Rifas deseja boa sorte! 🍀</footer>
+</body>
+</html>
