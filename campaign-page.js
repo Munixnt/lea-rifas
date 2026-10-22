@@ -10,7 +10,7 @@
 
     function renderNumbers() {
         const archived = campaign?.status !== "active";
-        $("#campaign-numbers").innerHTML = Array.from({ length: 100 }, (_, number) => {
+        $("#campaign-numbers").innerHTML = Array.from({ length: 100 }, (_, index) => (index + 1) % 100).map((number) => {
             const status = reserved.get(number);
             const isSelected = selected.has(number);
             const kind = status === "confirmed" ? "paid" : status ? "reserved" : isSelected ? "selected" : "";

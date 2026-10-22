@@ -332,7 +332,7 @@
             const sold = new Map((data || []).map((item) => [item.ticket_number, item.status]));
             $("#poster-price").textContent = formatMoney(campaign.ticket_price);
             $("#poster-prize").textContent = formatMoney(campaign.prize_amount);
-            $("#poster-numbers").innerHTML = Array.from({ length: 100 }, (_, number) => {
+            $("#poster-numbers").innerHTML = Array.from({ length: 100 }, (_, index) => (index + 1) % 100).map((number) => {
                 const status = sold.get(number);
                 const classes = status === "confirmed" ? "reserved paid" : status ? "reserved" : "";
                 return `<span class="poster-number ${classes}">${status ? "🍀" : formatNumber(number)}</span>`;
