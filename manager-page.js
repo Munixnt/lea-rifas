@@ -7,6 +7,8 @@
     let campaigns = [];
     let customerRows = [];
     let customerProfiles = [];
+    let managerTickets = [];
+    let financeTickets = [];
     let selectedSaleCustomerId = null;
 
     async function loadManager() {
@@ -31,16 +33,29 @@
         campaigns = campaignResult.data || [];
         customerProfiles = profileResult.data || [];
         const campaignById = new Map(campaigns.map((campaign) => [campaign.id, campaign]));
+        financeTickets = ticketResult.data || [];
         const visibleTickets = (ticketResult.data || []).filter((ticket) => {
             const campaign = campaignById.get(ticket.campaign_id);
-            return campaign?.status === "active" || (campaign?.status === "archived" && ticket.status === "fiado");
+            return campaign?.status === "active" || (campaign?.status === "archived" && ["confirmed", "fiado"].includes(ticket.status));
         });
+        managerTickets = visibleTickets;
+        renderDashboardCampaignOptions();
         renderSaleCampaigns();
         renderSaleCustomerOptions();
-        renderStats(visibleTickets);
+        renderStats();
+        renderFinanceCampaignOptions();
+        renderFinance();
         renderCampaigns();
-        renderTickets(visibleTickets);
         renderCustomers(visibleTickets);
+    }
+
+    function renderDashboardCampaignOptions() {
+        const select = $("#dashboard-campaign-filter");
+        const selectedId = select.value;
+        select.innerHTML = `<option value="">Todas as campanhas</option>${campaigns.map((campaign) =>
+            `<option value="${campaign.id}">${escapeHtml(campaign.name)}</option>`
+        ).join("")}`;
+        if (campaigns.some((campaign) => campaign.id === selectedId)) select.value = selectedId;
     }
 
     function renderSaleCampaigns() {
@@ -132,18 +147,125 @@
         }
     }
 
-    function renderStats(tickets) {
-        const activeIds = new Set(campaigns.filter((item) => item.status === "active").map((item) => item.id));
-        const pending = tickets.filter((ticket) => ticket.status === "pending" || ticket.status === "fiado");
-        const confirmed = tickets.filter((ticket) => ticket.status === "confirmed");
-        const reservedActive = tickets.filter((ticket) => activeIds.has(ticket.campaign_id)).length;
+    function renderStats() {
+        const selectedId = $("#dashboard-campaign-filter").value;
+        const selectedCampaigns = campaigns.filter((campaign) => !selectedId || campaign.id === selectedId);
+        const activeCampaigns = selectedCampaigns.filter((campaign) => campaign.status === "active");
+        const campaignIds = new Set(selectedCampaigns.map((campaign) => campaign.id));
+        const tickets = managerTickets.filter((ticket) => campaignIds.has(ticket.campaign_id));
+        const reservedActive = tickets.filter((ticket) => activeCampaigns.some((campaign) => campaign.id === ticket.campaign_id)).length;
+        const pending = tickets.filter((ticket) => ticket.status === "pending").length;
+        const customerIds = new Set(tickets.map((ticket) =>
+            ticket.buyer_id
+            || customerPhoneKey(ticket.profiles?.phone || ticket.buyer_phone)
+            || (ticket.buyer_name || ticket.profiles?.display_name || "").trim().toLocaleLowerCase("pt-BR")
+        ).filter(Boolean));
         const stats = [
-            ["Campanhas abertas", campaigns.filter((item) => item.status === "active").length],
-            ["Dezenas reservadas", `${reservedActive} / ${activeIds.size * 100}`],
-            ["A receber", formatMoney(pending.reduce((sum, item) => sum + Number(item.price_each), 0))],
-            ["Pix confirmado", formatMoney(confirmed.reduce((sum, item) => sum + Number(item.price_each), 0))]
+            ["Campanhas abertas", activeCampaigns.length],
+            ["Dezenas reservadas", `${reservedActive} / ${activeCampaigns.length * 100}`],
+            ["Reservas pendentes", pending],
+            ["Clientes atendidos", customerIds.size]
         ];
         $("#manager-stats").innerHTML = stats.map(([label, value]) => `<div class="stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+    }
+
+    function renderFinance() {
+        const campaignId = $("#finance-campaign-filter").value;
+        const campaign = campaigns.find((item) => item.id === campaignId);
+        const history = $("#finance-customer-history");
+        if (!campaign) {
+            $("#finance-stats").innerHTML = "";
+            history.innerHTML = '<p class="empty">Selecione uma campanha para visualizar o histórico.</p>';
+            return;
+        }
+        const campaignTickets = financeTickets.filter((ticket) => ticket.campaign_id === campaignId);
+        const confirmed = campaignTickets.filter((ticket) => ticket.status === "confirmed");
+        const outstanding = campaignTickets.filter((ticket) => ticket.status === "pending" || ticket.status === "fiado");
+        const query = $("#reservation-customer-search").value.trim().toLocaleLowerCase("pt-BR");
+        const queryDigits = query.replace(/\D/g, "");
+        const customers = [];
+        const customerAliases = new Map();
+        for (const ticket of campaignTickets) {
+            const phone = ticket.profiles?.phone || ticket.buyer_phone || "";
+            const phoneKey = customerPhoneKey(phone);
+            const buyerId = ticket.buyer_id || "";
+            const name = ticket.profiles?.display_name || ticket.buyer_name || "Cliente";
+            const normalizedName = name.trim().toLocaleLowerCase("pt-BR");
+            const aliases = [
+                buyerId && `user:${buyerId}`,
+                phoneKey && `phone:${phoneKey}`,
+                !buyerId && !phoneKey && normalizedName && `name:${normalizedName}`
+            ].filter(Boolean);
+            let customer = aliases.map((alias) => customerAliases.get(alias)).find(Boolean);
+            if (!customer) {
+                customer = { name, phone, phoneKey, tickets: [] };
+                customers.push(customer);
+            } else {
+                if ((!customer.name || customer.name === "Cliente") && name !== "Cliente") customer.name = name;
+                if (!customer.phone && phone) {
+                    customer.phone = phone;
+                    customer.phoneKey = phoneKey;
+                }
+            }
+            customer.tickets.push(ticket);
+            aliases.forEach((alias) => customerAliases.set(alias, customer));
+        }
+        const customerRows = customers.filter((customer) => {
+            if (!query) return true;
+            return customer.name.toLocaleLowerCase("pt-BR").includes(query)
+                || customer.phone.toLocaleLowerCase("pt-BR").includes(query)
+                || (queryDigits && customer.phoneKey.includes(queryDigits));
+        });
+        const sum = (tickets) => tickets.reduce((amount, ticket) => amount + Number(ticket.price_each), 0);
+        const stats = [
+            ["Total negociado", formatMoney(sum([...confirmed, ...outstanding]))],
+            ["Recebido", formatMoney(sum(confirmed))],
+            ["A receber", formatMoney(sum(outstanding))],
+            ["Dezenas", campaignTickets.length]
+        ];
+        $("#finance-stats").innerHTML = stats.map(([label, value]) => `<div class="stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+        if (!customerRows.length) {
+            history.innerHTML = campaignTickets.length
+                ? '<p class="empty">Nenhum cliente encontrado para esta busca.</p>'
+                : '<p class="empty">Ainda não há reservas nesta campanha.</p>';
+            return;
+        }
+        const rows = customerRows.map((customer) => {
+            const paid = customer.tickets.filter((ticket) => ticket.status === "confirmed");
+            const due = customer.tickets.filter((ticket) => ticket.status === "pending" || ticket.status === "fiado");
+            const paidAmount = sum(paid);
+            const dueAmount = sum(due);
+            const numbers = customer.tickets.map((ticket) => {
+                const status = ticket.status === "confirmed" ? "Pago" : ticket.status === "fiado" ? "Fiado" : "Pendente";
+                const actions = ticket.status === "pending"
+                    ? `<button type="button" class="button small" data-action="confirm" data-id="${ticket.id}">Confirmar Pix</button><button type="button" class="button gold small" data-action="fiado" data-id="${ticket.id}">Fiado</button><button type="button" class="button red small" data-action="release" data-id="${ticket.id}">Liberar</button>`
+                    : ticket.status === "fiado"
+                        ? `<button type="button" class="button small" data-action="confirm" data-id="${ticket.id}">Receber Pix</button><button type="button" class="button red small" data-action="release" data-id="${ticket.id}">Liberar</button>`
+                        : "";
+                return `<span class="finance-ticket"><span class="badge${ticket.status === "confirmed" ? "" : " pending"}">${formatNumber(ticket.ticket_number)} · ${status}</span>${actions}</span>`;
+            }).join("");
+            const message = `Olá, ${customer.name}! Passando para lembrar do pagamento de ${formatMoney(dueAmount)} referente às dezenas ${due.map((ticket) => formatNumber(ticket.ticket_number)).join(", ")} da campanha ${campaign.name}.`;
+            const collectionLink = due.length && customer.phoneKey
+                ? `<a class="button gold small" href="https://wa.me/${customer.phoneKey}?text=${encodeURIComponent(message)}" target="_blank" rel="noopener noreferrer">Cobrar pelo WhatsApp</a>`
+                : due.length ? "Sem telefone" : "—";
+            return `<tr>
+                <td><strong>${escapeHtml(customer.name)}</strong>${customer.phone ? `<br><small>${escapeHtml(customer.phone)}</small>` : ""}</td>
+                <td><div class="finance-ticket-list">${numbers}</div></td>
+                <td>${formatMoney(paidAmount)}</td>
+                <td>${formatMoney(dueAmount)}</td>
+                <td>${collectionLink}</td>
+            </tr>`;
+        }).join("");
+        history.innerHTML = `<table><thead><tr><th>Cliente</th><th>Dezenas e situação</th><th>Pago</th><th>A receber</th><th>Cobrança</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function renderFinanceCampaignOptions() {
+        const select = $("#finance-campaign-filter");
+        const selectedId = select.value;
+        select.innerHTML = `<option value="">Selecione uma campanha</option>${campaigns.map((campaign) =>
+            `<option value="${campaign.id}">${escapeHtml(campaign.name)}${campaign.status === "archived" ? " (encerrada)" : ""}</option>`
+        ).join("")}`;
+        if (campaigns.some((campaign) => campaign.id === selectedId)) select.value = selectedId;
     }
 
     function customerPhoneKey(phone) {
@@ -231,46 +353,6 @@
                     ${campaign.status === "active" ? `<button type="button" class="button secondary small" data-action="edit" data-id="${campaign.id}">Editar</button><button type="button" class="button gold small" data-action="archive" data-id="${campaign.id}">Arquivar</button>` : ""}
                 </td>
             </tr>`).join("")}</tbody></table>`;
-    }
-
-    function renderTickets(tickets) {
-        const groups = campaigns.map((campaign) => ({
-            campaign,
-            tickets: tickets.filter((ticket) => ticket.campaign_id === campaign.id)
-        })).filter((group) => group.tickets.length);
-        if (!groups.length) {
-            $("#manager-tickets").innerHTML = '<p class="empty">Ainda não há reservas.</p>';
-            return;
-        }
-        const ticketRows = (groupTickets) => groupTickets.map((ticket) => {
-            const buyer = ticket.profiles?.display_name || ticket.buyer_name || "Cliente";
-            const phone = ticket.profiles?.phone || ticket.buyer_phone || "";
-            const digits = phone.replace(/\D/g, "").replace(/^0/, "");
-            const wa = digits ? `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}` : "";
-            return `<tr>
-                <td>${escapeHtml(buyer)}${phone ? `<br><small>${escapeHtml(phone)}</small>` : ""}</td>
-                <td>${formatNumber(ticket.ticket_number)}</td>
-                <td>${formatMoney(ticket.price_each)}</td>
-                <td><span class="badge${ticket.status !== "confirmed" ? " pending" : ""}">${ticket.status === "confirmed" ? "Confirmado" : ticket.status === "fiado" ? "Fiado" : "Pendente"}</span></td>
-                <td>
-                    ${ticket.status === "pending" ? `<button type="button" class="button small" data-action="confirm" data-id="${ticket.id}">Confirmar Pix</button><button type="button" class="button gold small" data-action="fiado" data-id="${ticket.id}">Fiado</button><button type="button" class="button red small" data-action="release" data-id="${ticket.id}">Liberar</button>` : ""}
-                    ${ticket.status === "fiado" ? `<button type="button" class="button small" data-action="confirm" data-id="${ticket.id}">Receber Pix</button><button type="button" class="button red small" data-action="release" data-id="${ticket.id}">Liberar</button>` : ""}
-                    ${wa ? `<a class="button secondary small" href="${wa}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
-                </td>
-            </tr>`;
-        }).join("");
-        $("#manager-tickets").innerHTML = groups.map(({ campaign, tickets: campaignTickets }) => {
-            const pending = campaignTickets.filter((ticket) => ticket.status === "pending");
-            const fiados = campaignTickets.filter((ticket) => ticket.status === "fiado");
-            const confirmed = campaignTickets.filter((ticket) => ticket.status === "confirmed");
-            const summary = campaign.status === "archived"
-                ? `<span class="badge pending">Fiados: ${fiados.length} · ${formatMoney(fiados.reduce((sum, ticket) => sum + Number(ticket.price_each), 0))}</span>`
-                : `<span class="badge pending">Pendentes: ${pending.length}</span><span class="badge pending">Fiados: ${fiados.length}</span><span class="badge">Pagos: ${confirmed.length} · ${formatMoney(confirmed.reduce((sum, ticket) => sum + Number(ticket.price_each), 0))}</span>`;
-            return `<section class="campaign-sales-group">
-                <div class="campaign-sales-heading"><h3>${escapeHtml(campaign.name)}</h3><div class="campaign-sales-summary">${summary}</div></div>
-                <table><thead><tr><th>Comprador</th><th>Dezena</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>${ticketRows(campaignTickets)}</tbody></table>
-            </section>`;
-        }).join("");
     }
 
     function resetCampaignForm() {
@@ -429,6 +511,9 @@
     $("#sale-form").addEventListener("submit", (event) => createSale(event).catch(handleError));
     $("#sale-customer-search").addEventListener("change", selectSaleCustomer);
     $("#customer-search").addEventListener("input", filterCustomers);
+    $("#dashboard-campaign-filter").addEventListener("change", renderStats);
+    $("#finance-campaign-filter").addEventListener("change", renderFinance);
+    $("#reservation-customer-search").addEventListener("input", renderFinance);
     $("#archive-form").addEventListener("submit", (event) => archiveCampaign(event).catch(handleError));
     $("#publish-winner").addEventListener("change", () => {
         $("#winner-name-field").classList.toggle("hidden", !$("#publish-winner").checked);
@@ -447,7 +532,7 @@
         if (button.dataset.action === "edit" && campaign) openCampaignForm(campaign);
         if (button.dataset.action === "archive") openArchiveForm(button.dataset.id);
     });
-    $("#manager-tickets").addEventListener("click", (event) => {
+    $("#finance-customer-history").addEventListener("click", (event) => {
         const button = event.target.closest("[data-action]");
         if (!button) return;
         if (button.dataset.action === "confirm") confirmTicket(button.dataset.id).catch(handleError);

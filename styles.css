@@ -128,6 +128,9 @@
         .campaign-sales-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
         .campaign-sales-heading h3 { margin: 0; }
         .campaign-sales-summary { display: flex; flex-wrap: wrap; gap: 6px; }
+        .dashboard-filter { max-width: 340px; margin-bottom: 14px; }
+        .finance-ticket-list { display: flex; flex-wrap: wrap; gap: 7px; min-width: 260px; }
+        .finance-ticket { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: white; }
         #winner-name-field { margin-top: 12px; }
         .site-footer { padding: 9px; background: var(--green); color: #e0e9df; font-size: .7rem; text-align: center; }
         @media (max-width: 620px) {

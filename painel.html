@@ -30,6 +30,7 @@
             <div><h1>Painel gerencial</h1><p class="muted">Vendas, pagamentos e situação de todas as campanhas.</p></div>
             <button id="new-campaign-button" type="button" class="button">＋ Nova campanha</button>
         </div>
+        <div class="field dashboard-filter"><label for="dashboard-campaign-filter">Filtrar dashboard por campanha</label><select id="dashboard-campaign-filter"><option value="">Todas as campanhas</option></select></div>
         <div id="manager-stats" class="stats"></div>
     </section>
     <section id="sale-panel" class="panel hidden">
@@ -72,9 +73,14 @@
         <div id="manager-campaigns" class="table-wrap"></div>
     </section>
     <section class="panel">
-        <h2>Reservas e pagamentos por campanha</h2>
-        <p class="muted">Campanhas arquivadas mostram somente as dezenas fiadas que ainda aguardam pagamento.</p>
-        <div id="manager-tickets" class="table-wrap"></div>
+        <h2>Painel financeiro e reservas</h2>
+        <p class="muted">Selecione uma campanha para consultar valores e o histórico de clientes. Pagamentos confirmados e fiados permanecem registrados após o encerramento.</p>
+        <div class="form-grid">
+            <div class="field"><label for="finance-campaign-filter">Campanha</label><select id="finance-campaign-filter"><option value="">Selecione uma campanha</option></select></div>
+            <div class="field"><label for="reservation-customer-search">Buscar cliente</label><input id="reservation-customer-search" type="search" placeholder="Nome ou telefone"></div>
+        </div>
+        <div id="finance-stats" class="stats"></div>
+        <div id="finance-customer-history" class="table-wrap"><p class="empty">Selecione uma campanha para visualizar o histórico.</p></div>
     </section>
 </main>
 <footer class="site-footer">Lea Rifas deseja boa sorte! 🍀</footer>
