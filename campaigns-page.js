@@ -1,7 +1,7 @@
 (() => {
     "use strict";
 
-    const { ready, state, escapeHtml, formatMoney, formatDate, shareCampaign, showNotice } = window.leaRifas;
+    const { ready, state, escapeHtml, formatMoney, formatDate, formatNumber, shareCampaign, showNotice } = window.leaRifas;
     const list = document.querySelector("#campaign-list");
 
     async function loadCampaigns() {
