@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#123d2c">
     <meta name="description" content="Confira as campanhas e escolha suas dezenas na Lea Rifas.">
+    <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="stylesheet" href="./styles.css">
     <title>Campanhas | Lea Rifas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js" defer></script>
     <script src="./app.js" defer></script>
+    <script src="./pwa.js" defer></script>
     <script src="./campaigns-page.js?v=20261022-2" defer></script>
 </head>
 <body data-page="campaigns">
@@ -21,6 +24,7 @@
     <div class="account">
         <span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span>
         <span id="account-name" class="account-name">Visitante</span>
+        <button id="pwa-install-button" type="button" class="button secondary small" hidden>Instalar app</button>
         <a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a>
     </div>
 </header>

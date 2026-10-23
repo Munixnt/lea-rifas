@@ -24,10 +24,16 @@ Aplicativo web estático para campanhas de rifas. Os dados compartilhados, as co
 
 ## Publicar no GitHub Pages
 
-1. Envie os arquivos do projeto para a branch `main`, incluindo as páginas HTML, scripts JavaScript, `styles.css`, `logo-transparent.png`, `avatar.png` e `icon.ico`.
+1. Envie os arquivos do projeto para a branch `main`, incluindo as páginas HTML, scripts JavaScript, `styles.css`, `manifest.webmanifest`, `service-worker.js`, `pwa.js`, a pasta `icons/`, `logo-transparent.png`, `avatar.png` e `icon.ico`.
 2. No repositório, abra **Settings → Pages** e selecione **Deploy from a branch**, branch `main` e pasta `/(root)`.
 3. Depois que o GitHub Pages publicar o site, configure a URL final no Supabase (passo 5 acima).
 4. Copie o link criado no painel gerencial para divulgar cada campanha.
+
+## Instalar como aplicativo (PWA)
+
+Depois de publicar o site em HTTPS, abra-o no navegador do dispositivo e use **Instalar app** no cabeçalho. Navegadores que não oferecem o aviso de instalação mostram instruções para usar o menu do navegador; no iPhone/iPad, use **Compartilhar → Adicionar à Tela de Início**.
+
+O manifest e os ícones definem a aparência do aplicativo instalado. O service worker mantém os arquivos da interface em cache e permite abrir o shell do site sem conexão; login, campanhas e reservas continuam dependendo da conexão com o Supabase.
 
 O site foi separado em páginas independentes para facilitar a manutenção:
 

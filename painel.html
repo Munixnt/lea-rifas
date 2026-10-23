@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#123d2c">
+    <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="stylesheet" href="./styles.css">
     <title>Painel gerencial | Lea Rifas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="./supabase-config.js" defer></script>
     <script src="./app.js" defer></script>
+    <script src="./pwa.js" defer></script>
     <script src="./manager-page.js" defer></script>
 </head>
 <body data-page="manager">
 <header class="site-header">
     <a class="brand" href="./index.html" aria-label="Lea Rifas — página inicial"><img src="./logo-transparent.png" alt="Lea Rifas — A sorte é sua"></a>
-    <div class="account"><span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span><span id="account-name" class="account-name">Visitante</span><a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a></div>
+    <div class="account"><span class="avatar" aria-hidden="true"><img src="./avatar.png" alt=""></span><span id="account-name" class="account-name">Visitante</span><button id="pwa-install-button" type="button" class="button secondary small" hidden>Instalar app</button><a id="auth-link" class="button secondary small" data-action="account" href="./entrar.html">Entrar</a></div>
 </header>
 <main class="shell">
     <div id="app-notice" class="notice" role="status" aria-live="polite" hidden></div>
