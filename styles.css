@@ -124,6 +124,10 @@
         .auth-password { margin-top: 11px; }
         .auth-switch { margin: 14px 0 0; }
         .customer-search { max-width: 380px; margin-bottom: 12px; }
+        .campaign-sales-group + .campaign-sales-group { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+        .campaign-sales-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .campaign-sales-heading h3 { margin: 0; }
+        .campaign-sales-summary { display: flex; flex-wrap: wrap; gap: 6px; }
         #winner-name-field { margin-top: 12px; }
         .site-footer { padding: 9px; background: var(--green); color: #e0e9df; font-size: .7rem; text-align: center; }
         @media (max-width: 620px) {

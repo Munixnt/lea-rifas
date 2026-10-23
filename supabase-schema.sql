@@ -145,11 +145,13 @@ begin
 end;
 $$;
 
-create or replace function public.admin_create_campaign_sale(
+drop function if exists public.admin_create_campaign_sale(uuid, integer[], text, text, text);
+create function public.admin_create_campaign_sale(
     p_campaign_id uuid,
     p_numbers integer[],
     p_buyer_name text,
     p_buyer_phone text,
+    p_buyer_id uuid,
     p_status text default 'confirmed'
 )
 returns integer
@@ -170,11 +172,17 @@ begin
         raise exception 'Informe o nome do cliente (até 100 caracteres).';
     end if;
 
-    if p_buyer_phone is null or p_buyer_phone !~ '^\+[0-9]{10,13}$' then
+    if p_buyer_phone is not null and trim(p_buyer_phone) <> '' and p_buyer_phone !~ '^\+[0-9]{10,13}$' then
         raise exception 'Informe um telefone válido para contato.';
     end if;
 
-    if p_status is null or p_status not in ('pending', 'confirmed') then
+    if p_buyer_id is not null and not exists (
+        select 1 from public.profiles where id = p_buyer_id and role = 'customer'
+    ) then
+        raise exception 'O cliente cadastrado selecionado não é válido.';
+    end if;
+
+    if p_status is null or p_status not in ('pending', 'fiado', 'confirmed') then
         raise exception 'Status de venda inválido.';
     end if;
 
@@ -211,7 +219,7 @@ begin
     end if;
 
     insert into public.tickets (campaign_id, ticket_number, buyer_id, buyer_name, buyer_phone, price_each, status)
-    select p_campaign_id, requested.number, null, trim(p_buyer_name), p_buyer_phone,
+    select p_campaign_id, requested.number, p_buyer_id, trim(p_buyer_name), coalesce(trim(p_buyer_phone), ''),
            campaign_row.ticket_price, p_status
     from unnest(p_numbers) as requested(number);
 
@@ -222,10 +230,10 @@ $$;
 revoke all on function public.handle_new_user() from public, anon, authenticated;
 revoke all on function public.is_admin() from public;
 revoke all on function public.reserve_campaign_numbers(uuid, integer[]) from public, anon, authenticated;
-revoke all on function public.admin_create_campaign_sale(uuid, integer[], text, text, text) from public, anon, authenticated;
+revoke all on function public.admin_create_campaign_sale(uuid, integer[], text, text, uuid, text) from public, anon, authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.reserve_campaign_numbers(uuid, integer[]) to authenticated;
-grant execute on function public.admin_create_campaign_sale(uuid, integer[], text, text, text) to authenticated;
+grant execute on function public.admin_create_campaign_sale(uuid, integer[], text, text, uuid, text) to authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.campaigns enable row level security;

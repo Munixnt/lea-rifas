@@ -6,6 +6,8 @@
     const $ = (selector) => document.querySelector(selector);
     let campaigns = [];
     let customerRows = [];
+    let customerProfiles = [];
+    let selectedSaleCustomerId = null;
 
     async function loadManager() {
         await ready;
@@ -16,20 +18,29 @@
         }
         $("#sale-panel").classList.remove("hidden");
         $("#crm-panel").classList.remove("hidden");
-        const [campaignResult, ticketResult] = await Promise.all([
+        const [campaignResult, ticketResult, profileResult] = await Promise.all([
             state.client.from("campaigns").select("*").order("created_at", { ascending: false }),
             state.client.from("tickets")
                 .select("id,campaign_id,ticket_number,buyer_id,buyer_name,buyer_phone,status,price_each,campaigns(name),profiles(display_name,phone)")
-                .neq("status", "cancelled").order("created_at", { ascending: false })
+                .neq("status", "cancelled").order("created_at", { ascending: false }),
+            state.client.from("profiles").select("id,display_name,phone").eq("role", "customer").order("display_name")
         ]);
         if (campaignResult.error) throw campaignResult.error;
         if (ticketResult.error) throw ticketResult.error;
+        if (profileResult.error) throw profileResult.error;
         campaigns = campaignResult.data || [];
+        customerProfiles = profileResult.data || [];
+        const campaignById = new Map(campaigns.map((campaign) => [campaign.id, campaign]));
+        const visibleTickets = (ticketResult.data || []).filter((ticket) => {
+            const campaign = campaignById.get(ticket.campaign_id);
+            return campaign?.status === "active" || (campaign?.status === "archived" && ticket.status === "fiado");
+        });
         renderSaleCampaigns();
-        renderStats(ticketResult.data || []);
+        renderSaleCustomerOptions();
+        renderStats(visibleTickets);
         renderCampaigns();
-        renderTickets(ticketResult.data || []);
-        renderCustomers(ticketResult.data || []);
+        renderTickets(visibleTickets);
+        renderCustomers(visibleTickets);
     }
 
     function renderSaleCampaigns() {
@@ -62,10 +73,36 @@
     }
 
     function normalizeContactPhone(value) {
+        if (!value.trim()) return "";
         const digits = value.replace(/\D/g, "");
         if (/^55\d{10,11}$/.test(digits)) return `+${digits}`;
         if (/^\d{10,11}$/.test(digits)) return `+55${digits}`;
         throw new Error("Informe um telefone com DDD válido para contato.");
+    }
+
+    function saleCustomerOption(profile) {
+        const name = profile.display_name || profile.phone || "Cliente";
+        return `${name} · ${profile.phone || "sem telefone"}`;
+    }
+
+    function renderSaleCustomerOptions() {
+        $("#sale-customer-options").innerHTML = customerProfiles.map((profile) =>
+            `<option value="${escapeHtml(saleCustomerOption(profile))}"></option>`
+        ).join("");
+    }
+
+    function selectSaleCustomer() {
+        const value = $("#sale-customer-search").value;
+        const previousProfile = customerProfiles.find((item) => item.id === selectedSaleCustomerId);
+        const profile = customerProfiles.find((item) => saleCustomerOption(item) === value);
+        selectedSaleCustomerId = profile?.id || null;
+        if (!profile && previousProfile) {
+            if ($("#sale-customer-name").value === previousProfile.display_name) $("#sale-customer-name").value = "";
+            if ($("#sale-customer-phone").value === previousProfile.phone) $("#sale-customer-phone").value = "";
+        }
+        if (!profile) return;
+        $("#sale-customer-name").value = profile.display_name || "";
+        $("#sale-customer-phone").value = profile.phone || "";
     }
 
     async function createSale(event) {
@@ -82,10 +119,12 @@
                 p_numbers: parseSaleNumbers($("#sale-numbers").value),
                 p_buyer_name: buyerName,
                 p_buyer_phone: normalizeContactPhone($("#sale-customer-phone").value),
+                p_buyer_id: selectedSaleCustomerId,
                 p_status: $("#sale-status").value
             });
             if (error) throw error;
             $("#sale-form").reset();
+            selectedSaleCustomerId = null;
             showNotice(`Venda registrada para ${buyerName}: ${data} dezena${data === 1 ? "" : "s"}.`, "success");
             await loadManager();
         } finally {
@@ -118,7 +157,7 @@
         for (const ticket of tickets) {
             const phone = ticket.profiles?.phone || ticket.buyer_phone || "";
             const phoneKey = customerPhoneKey(phone);
-            const key = phoneKey || (ticket.buyer_id ? `user:${ticket.buyer_id}` : `ticket:${ticket.id}`);
+            const key = ticket.buyer_id ? `user:${ticket.buyer_id}` : phoneKey ? `phone:${phoneKey}` : `ticket:${ticket.id}`;
             let customer = customers.get(key);
             if (!customer) {
                 customer = {
@@ -195,18 +234,21 @@
     }
 
     function renderTickets(tickets) {
-        if (!tickets.length) {
+        const groups = campaigns.map((campaign) => ({
+            campaign,
+            tickets: tickets.filter((ticket) => ticket.campaign_id === campaign.id)
+        })).filter((group) => group.tickets.length);
+        if (!groups.length) {
             $("#manager-tickets").innerHTML = '<p class="empty">Ainda não há reservas.</p>';
             return;
         }
-        $("#manager-tickets").innerHTML = `<table><thead><tr><th>Comprador</th><th>Campanha</th><th>Dezena</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>${tickets.map((ticket) => {
+        const ticketRows = (groupTickets) => groupTickets.map((ticket) => {
             const buyer = ticket.profiles?.display_name || ticket.buyer_name || "Cliente";
             const phone = ticket.profiles?.phone || ticket.buyer_phone || "";
             const digits = phone.replace(/\D/g, "").replace(/^0/, "");
             const wa = digits ? `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}` : "";
             return `<tr>
                 <td>${escapeHtml(buyer)}${phone ? `<br><small>${escapeHtml(phone)}</small>` : ""}</td>
-                <td>${escapeHtml(ticket.campaigns?.name || "Campanha")}</td>
                 <td>${formatNumber(ticket.ticket_number)}</td>
                 <td>${formatMoney(ticket.price_each)}</td>
                 <td><span class="badge${ticket.status !== "confirmed" ? " pending" : ""}">${ticket.status === "confirmed" ? "Confirmado" : ticket.status === "fiado" ? "Fiado" : "Pendente"}</span></td>
@@ -216,7 +258,19 @@
                     ${wa ? `<a class="button secondary small" href="${wa}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
                 </td>
             </tr>`;
-        }).join("")}</tbody></table>`;
+        }).join("");
+        $("#manager-tickets").innerHTML = groups.map(({ campaign, tickets: campaignTickets }) => {
+            const pending = campaignTickets.filter((ticket) => ticket.status === "pending");
+            const fiados = campaignTickets.filter((ticket) => ticket.status === "fiado");
+            const confirmed = campaignTickets.filter((ticket) => ticket.status === "confirmed");
+            const summary = campaign.status === "archived"
+                ? `<span class="badge pending">Fiados: ${fiados.length} · ${formatMoney(fiados.reduce((sum, ticket) => sum + Number(ticket.price_each), 0))}</span>`
+                : `<span class="badge pending">Pendentes: ${pending.length}</span><span class="badge pending">Fiados: ${fiados.length}</span><span class="badge">Pagos: ${confirmed.length} · ${formatMoney(confirmed.reduce((sum, ticket) => sum + Number(ticket.price_each), 0))}</span>`;
+            return `<section class="campaign-sales-group">
+                <div class="campaign-sales-heading"><h3>${escapeHtml(campaign.name)}</h3><div class="campaign-sales-summary">${summary}</div></div>
+                <table><thead><tr><th>Comprador</th><th>Dezena</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>${ticketRows(campaignTickets)}</tbody></table>
+            </section>`;
+        }).join("");
     }
 
     function resetCampaignForm() {
@@ -373,6 +427,7 @@
     $("#cancel-campaign-form").addEventListener("click", resetCampaignForm);
     $("#campaign-form").addEventListener("submit", (event) => saveCampaign(event).catch(handleError));
     $("#sale-form").addEventListener("submit", (event) => createSale(event).catch(handleError));
+    $("#sale-customer-search").addEventListener("change", selectSaleCustomer);
     $("#customer-search").addEventListener("input", filterCustomers);
     $("#archive-form").addEventListener("submit", (event) => archiveCampaign(event).catch(handleError));
     $("#publish-winner").addEventListener("change", () => {

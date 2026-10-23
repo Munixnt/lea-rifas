@@ -34,13 +34,14 @@
     </section>
     <section id="sale-panel" class="panel hidden">
         <h2>Nova venda pelo painel</h2>
-        <p class="muted">Registre o cliente, as dezenas e o status do pagamento. O cliente e a venda entram no CRM e na cartela pública.</p>
+        <p class="muted">Busque um cliente cadastrado ou faça uma venda avulsa informando apenas o nome. As dezenas ficam imediatamente indisponíveis na cartela.</p>
         <form id="sale-form">
             <div class="form-grid">
                 <div class="field"><label for="sale-campaign">Campanha</label><select id="sale-campaign" required></select></div>
-                <div class="field"><label for="sale-status">Pagamento</label><select id="sale-status"><option value="confirmed">Pago / confirmado</option><option value="pending">Pendente</option></select></div>
+                <div class="field"><label for="sale-status">Pagamento</label><select id="sale-status"><option value="confirmed">Pago / confirmado</option><option value="fiado">Fiado — dezena confirmada, pagamento pendente</option><option value="pending">Reserva pendente</option></select></div>
+                <div class="field span-2"><label for="sale-customer-search">Buscar cliente cadastrado (opcional)</label><input id="sale-customer-search" list="sale-customer-options" autocomplete="off" placeholder="Digite o nome ou telefone"><datalist id="sale-customer-options"></datalist><small class="muted">Escolha uma sugestão para vincular a venda ao cadastro, ou deixe em branco para venda avulsa.</small></div>
                 <div class="field"><label for="sale-customer-name">Nome do cliente</label><input id="sale-customer-name" required maxlength="100" autocomplete="name"></div>
-                <div class="field"><label for="sale-customer-phone">Telefone para contato</label><input id="sale-customer-phone" required type="tel" autocomplete="tel" inputmode="tel" placeholder="(77) 99999-9999"></div>
+                <div class="field"><label for="sale-customer-phone">Telefone para contato (opcional)</label><input id="sale-customer-phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(77) 99999-9999"></div>
                 <div class="field span-2"><label for="sale-numbers">Dezenas</label><input id="sale-numbers" required inputmode="numeric" placeholder="Ex.: 01, 12, 37"><small class="muted">Informe números de 00 a 99, separados por vírgula ou espaço.</small></div>
             </div>
             <div class="form-actions"><button id="sale-submit" type="submit" class="button">Registrar venda</button></div>
@@ -71,7 +72,8 @@
         <div id="manager-campaigns" class="table-wrap"></div>
     </section>
     <section class="panel">
-        <h2>Reservas e pagamentos</h2>
+        <h2>Reservas e pagamentos por campanha</h2>
+        <p class="muted">Campanhas arquivadas mostram somente as dezenas fiadas que ainda aguardam pagamento.</p>
         <div id="manager-tickets" class="table-wrap"></div>
     </section>
 </main>
